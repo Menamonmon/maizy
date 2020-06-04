@@ -97,7 +97,6 @@ class Wall:
 			if not corners:
 				return
 		
-
 	@property
 	def is_border_wall(self):
 		return self.friend == None
@@ -143,8 +142,34 @@ class Wall:
 		return False
 
 
+class CombinedWall:
+
+	def __init__(self, wall1, wall2=None):
+		self.wall1 = wall1
+		self.wall2 = wall2
+			
+	@property 
+	def is_edge(self):
+		return self.wall2 == None
+
+	@property
+	def cells(self):
+		c_list = []
+		c_list.append(self.wall1.parent)
+		if self.wall2:
+			c_list.append(self.wall2.parent)
+		return c_list
+	
+	@property 
+	def walls(self):
+		foo = [self.wall1]
+		if self.wall2:
+			foo.append(self.wall2)
+		return foo
+
 def merge_walls(wall1, wall2):
 	wall1.friend, wall2.friend = wall2, wall1
+	return CombinedWall(wall1, wall2)
 
 def main():
 	pygame.init()

@@ -17,6 +17,30 @@ def remove_wall_between(cell1, cell2):
 	elif direction == 3:
 		cell1.right_wall.hide()
 
+	cell1.update()
+	cell2.update()
+
+def are_cells_connected(cell1, cell2):
+	direction = determine_direction(cell1.position, cell2.position)
+	if direction == 0:
+		w1, w2 = cell1.upper_wall, cell2.lower_wall
+	elif direction == 1:
+		w1, w2 = cell1.left_wall, cell2.right_wall
+	elif direction == 2:
+		w1, w2 = cell1.lower_wall, cell2.upper_wall
+	elif direction == 3:
+		w1, w2 = cell1.right_wall, cell2.left_wall
+	else:
+		raise Exception(f'The cells at the positions {cell1.position} and {cell2.position} are not adjacent')
+	
+	wall1_match = w1.friend == w2
+	wall2_match = w2.friend == w1
+	if wall1_match != wall2_match:
+		raise Exception(f'The walls are not properly connected for the cells at {cell1.position} and {cell2.position}.')
+	else:
+		return wall1_match
+
+
 class Cell:
 
 	def __init__(self, display, position, color=(255, 255, 255), side=None, grid_size=None):
@@ -36,19 +60,28 @@ class Cell:
 		self.visited = False
 		self.visited_twice = False
 		self.is_current_cell = False
-		self.in_path = False
+		self.used_in_path = False
+		self.part_of_path = False
 		self.is_branch = False
-		factor = 10 if self.grid_size < 50 else 0
-		self.latency = 1 / (factor ** (self.grid_size/10)) if factor > 0  else 0
 
 	def connect_with_neighbors(self, grid):
+		comb_walls_list = []
 		for dirc in DIRECTIONS:
 			x, y = apply_transform(self.position, dirc)
 			if is_valid_position((x, y), grid.size - 1):
 				n = grid[y][x]
-				self.add_neighbor(n)
+				nn = self.add_neighbor(n, not are_cells_connected(self, n))
+				if nn is not None:
+					comb_walls_list.append(nn)
+		return comb_walls_list
 
 	def determine_color(self):
+		if self.part_of_path:
+			self.color = (232, 198, 28)
+			return
+		if self.used_in_path:
+			self.color = (51, 44, 44)
+			return 
 		if self.visited:
 			self.color = (3, 252, 73)
 			return
@@ -58,10 +91,10 @@ class Cell:
 		if self.is_current_cell:
 			self.color = (240, 252, 3)
 			return 
+		
 		if self.is_branch:
 			self.color = (252, 3, 44)
 			return
-		
 		self.color = self.original_color
 
 	@property
@@ -70,7 +103,7 @@ class Cell:
 
 	@property
 	def open_sides(self):
-		return [n for n, w in zip(self._neighbors, self.walls) if w.is_open() and (not n.in_path)]	
+		return [n for n, w in zip(self._neighbors, self.walls) if (n is not None) and (w.is_open()) and (not n.used_in_path)]	
 
 	@property
 	def walls(self):
@@ -112,20 +145,22 @@ class Cell:
 			pygame.display.update(rect)
 		time.sleep(latency)
 
-	def add_neighbor(self, neighbor):
+	def add_neighbor(self, neighbor, merged_walls=True):
 		direction = determine_direction(self.position, neighbor.position)
 		if direction == 0:
-			merge_walls(neighbor.lower_wall, self.upper_wall)
+			wall1, wall2 = neighbor.lower_wall, self.upper_wall
 		elif direction == 1:
-			merge_walls(neighbor.right_wall, self.left_wall)
+			wall1, wall2 = neighbor.right_wall, self.left_wall
 		elif direction == 2:
-			merge_walls(neighbor.upper_wall, self.lower_wall)
+			wall1, wall2 = neighbor.upper_wall, self.lower_wall
 		elif direction == 3:
-			merge_walls(neighbor.left_wall, self.right_wall)
+			wall1, wall2 = neighbor.left_wall, self.right_wall
 		else:
 			raise Exception(f"The Cell at the position {neighbor.position} can not be a neighbor of the Cell at {self.position}")
 
 		self._neighbors[direction] = neighbor
+		if merged_walls:
+			return merge_walls(wall1, wall2)
 
 	def is_touched(self):
 		mpos = pygame.mouse.get_pos()
@@ -146,8 +181,6 @@ class Cell:
 				raise Exception(f'The cell at the position {self.position} is chosen more then twice')
 			self.visited = True
 		
-		self.update(self.latency)
-
 def main():
 	pygame.init()
 	DISPLAY = pygame.display.set_mode((600, 600))

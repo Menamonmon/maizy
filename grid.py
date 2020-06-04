@@ -23,9 +23,13 @@ class Grid:
 		return self.cell_list[index]
 
 	def connect_cells(self):
+		self.walls = []
 		for row in self.cell_list:
 			for cell in row:
-				cell.connect_with_neighbors(self)
+				self.walls += cell.connect_with_neighbors(self)
+
+	def	walls_for_cell(self, cell):
+		return [wall for wall in self.walls if cell in wall.cells]
 
 	def reset(self):
 		self.cell_list = [ [ Cell(self.display, (x, y), grid_size=self.size) for x in range(self.size) ] for y in range(self.size) ]

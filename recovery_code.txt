@@ -1,0 +1,32 @@
+
+
+		# if self.horizontal_div:
+		# 	s1x, s1y = 0, 0
+		# 	e1x, e1y = int(len(cell_list[0])/2) - 1, len(cell_list) - 1 
+		# 	s2x, s2y = e1x, 0
+		# 	e2x, e2y = len(cell_list[0]) - 1, len(cell_list) - 1
+		# 	self.horizontal_div = False
+		# else:
+		# 	s1x, s1y = 0, 0
+		# 	e1y, e1x = int(len(cell_list[0])/2) - 1, len(cell_list) - 1
+		# 	s2y, s2x = e1y, 0
+		# 	e2y, e2x = len(cell_list[0]) - 1, len(cell_list) - 1 
+		# 	self.horizontal_div = False
+
+		
+		# # s1*, e1* represents the start and the end of the first half of the divided list
+		# # s2*, e2* represents the start and the end of the second half of the divided list
+
+		# try:
+		# 	sub_cell_lists = [
+		# 	[cell_list[y][s1x:e1x] for y in range(s1y, e1y)],
+		# 	[cell_list[y][s2x:e2x] for y in range(s2y, e2y)]
+		# 	]
+		# except IndexError:
+		# 	print(f'Start 1 is ({s1x}, {s1y}) end 1 ({e1x}, {e1y}) start 2 ({s2x}, {s2y}) end 2 ({e2x}, {e2y})')
+		# 	return
+
+		# for index, sublist in enumerate(sub_cell_lists):
+		# 	hide_wall(sublist, index)
+		# 	self.divide_grid(sublist)
+

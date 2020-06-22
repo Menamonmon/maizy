@@ -2,6 +2,7 @@ import pygame
 from threading import Thread
 import time
 import random as rd
+import copy as c
 
 COLORS = [
 	(128, 0, 0),
@@ -89,13 +90,15 @@ class Wall:
 		self.cover = Cover(self)
 
 	def draw(self, corners=True):
+		l = []
 		if not self.covered or corners:
-			pygame.draw.rect(self.display, self.color, (self.position, (self.width, self.height)))
+			l.append(pygame.draw.rect(self.display, self.color, (self.position, (self.width, self.height))))
 		
 		if self.covered:
-			self.cover.draw()
+			l.append(self.cover.draw())
 			if not corners:
-				return
+				return l
+		return l
 		
 	@property
 	def is_border_wall(self):
@@ -147,6 +150,9 @@ class CombinedWall:
 	def __init__(self, wall1, wall2=None):
 		self.wall1 = wall1
 		self.wall2 = wall2
+
+	def __str__(self):
+		return f'A Wall that joins the cells at {self.wall1.parent.position}, {self.wall2.parent.position}'
 			
 	@property 
 	def is_edge(self):
@@ -166,6 +172,10 @@ class CombinedWall:
 		if self.wall2:
 			foo.append(self.wall2)
 		return foo
+
+	def hide(self):
+		self.wall1.hide()
+		# self.wall2.hide()
 
 def merge_walls(wall1, wall2):
 	wall1.friend, wall2.friend = wall2, wall1

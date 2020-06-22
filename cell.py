@@ -4,7 +4,7 @@ from wall import *
 def is_valid_position(position, maximum, minimum=0):
 	return (minimum <= position[0] and minimum <= position[1]) and (maximum >= position[0] and maximum >= position[1])
 
-def remove_wall_between(cell1, cell2):
+def remove_wall_between(cell1, cell2, update=False):
 	p1 = cell1.position
 	p2 = cell2.position
 	direction = determine_direction(p1, p2)
@@ -17,8 +17,9 @@ def remove_wall_between(cell1, cell2):
 	elif direction == 3:
 		cell1.right_wall.hide()
 
-	cell1.update()
-	cell2.update()
+	if update:
+		cell1.update()
+		cell2.update()
 
 def are_cells_connected(cell1, cell2):
 	direction = determine_direction(cell1.position, cell2.position)
@@ -39,7 +40,20 @@ def are_cells_connected(cell1, cell2):
 		raise Exception(f'The walls are not properly connected for the cells at {cell1.position} and {cell2.position}.')
 	else:
 		return wall1_match
+	
+def cells_in_same_sets(c1, c2):
+	return c1.position in c2.cells_set and c2 in c1.cells_set
 
+def join_cell_sets(c1, c2):
+	new_set = c1.cells_set.union(c2.cells_set)
+	# print('The new set is ', new_set)
+	for cell in c1.cells_set:
+		cell.cells_set = new_set
+	for cell in c2.cells_set:
+		cell.cells_set = new_set
+	# c1.cells_set, c2.cells_set = new_set, new_set
+	# for cell in new_set:
+	# 	cell.cells_set = new_set
 
 class Cell:
 
@@ -48,7 +62,7 @@ class Cell:
 		self.grid_size = 50 if grid_size is None else grid_size
 		display_size = min(self.display.get_size())
 		self.side = display_size/self.grid_size if side is None else side
-		self.wtcr = 100
+		self.wtcr = 10
 		self.position = position
 		self.color = color 
 		self.original_color = self.color
@@ -63,6 +77,7 @@ class Cell:
 		self.used_in_path = False
 		self.part_of_path = False
 		self.is_branch = False
+		self.cells_set = {self}
 
 	def connect_with_neighbors(self, grid):
 		comb_walls_list = []
@@ -136,13 +151,16 @@ class Cell:
 		ws = []
 		for wall in self.walls:
 			w = wall.draw()
-			ws.append(w)
+			ws += w
 		return [c] + ws
 
 	def update(self, latency=0):
 		things_to_update = self.draw()
 		for rect in things_to_update:
 			pygame.display.update(rect)
+		# for n in self.neighbors:
+		# 	if n is not None:
+		# 		n.update()
 		time.sleep(latency)
 
 	def add_neighbor(self, neighbor, merged_walls=True):
@@ -180,6 +198,10 @@ class Cell:
 			if self.visited_twice:
 				raise Exception(f'The cell at the position {self.position} is chosen more then twice')
 			self.visited = True
+
+	def unchoose(self):
+		self.visited = False
+		self.visited_twice = False
 		
 def main():
 	pygame.init()
